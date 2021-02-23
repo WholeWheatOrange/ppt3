@@ -224,7 +224,7 @@ function startTetris() {
     var queueWidth = queueCanvas.width;
     var queueHeight = queueCanvas.height;
     var queueContext = queueCanvas.getContext("2d")
-    var controls = {"move_left":[37,"ArrowLeft"],"move_right":[39,"ArrowRight"],"rotate_left":[65,"a"],"rotate_right":[38,"ArrowUp"],"rotate_180":[16,"Shift"],"softdrop":[40,"ArrowDown"],"harddrop":[32,"Spacebar"],"hold":[68,"d"],"restart":[82,"r"], "DAS": 67, "ARR": 10, "grav_ARR":0}
+    var controls = { "move_left": [37, "ArrowLeft"], "move_right": [39, "ArrowRight"], "rotate_left": [65, "a"], "rotate_right": [38, "ArrowUp"], "rotate_180": [16, "Shift"], "softdrop": [40, "ArrowDown"], "harddrop": [32, "Spacebar"], "hold": [68, "d"], "restart": [82, "r"], "DAS": 67, "ARR": 10, "grav_ARR": 0 }
     var b2b
     var combo;
 
@@ -313,27 +313,34 @@ function startTetris() {
         }
 
         if (held) {
-            
-        holdContext.fillStyle = "#000000";
-        holdContext.fillRect(0,0,holdWidth,holdHeight);
-        holdMatrix = generatePieceMatrix(held, 0);
-        for (let i = 0; i < holdMatrix.length; i++) {
-            for (let j = 0; j < holdMatrix[i].length; j++) {
-                if (holdMatrix[i][j] != 0) {
-                    holdContext.fillStyle = colors[holdMatrix[i][j]];
-                    holdContext.fillRect((j) * 32 + 12, (i) * 32 + 12, 32, 32)
+
+            holdContext.fillStyle = "#000000";
+            holdContext.fillRect(0, 0, holdWidth, holdHeight);
+            holdMatrix = generatePieceMatrix(held, 0);
+            for (let i = 0; i < holdMatrix.length; i++) {
+                for (let j = 0; j < holdMatrix[i].length; j++) {
+                    if (holdMatrix[i][j] != 0 && holdMatrix[i][j] != 9) {
+                        holdContext.fillStyle = colors[holdMatrix[i][j]];
+                        holdContext.fillRect((j) * 32 + 12, (i) * 32 + 12, 32, 32)
+                    }
                 }
             }
-        }
         }
 
 
         queueContext.fillStyle = "#000000";
-        queueContext.fillRect(0,0,queueWidth,queueHeight);
+        queueContext.fillRect(0, 0, queueWidth, queueHeight);
         for (let h = 0; h < queue.length; h++) {
             queueMatrix = generatePieceMatrix(queue[h])
+            for (let i = 0; i < queueMatrix.length; i++) {
+                for (let j = 0; j < queueMatrix[i].length; j++) {
+                    if (queueMatrix[i][j] != 0 && queueMatrix[i][j] != 9) {
+                        queueContext.fillStyle = colors[queueMatrix[i][j]];
+                        queueContext.fillRect((j) * 32 + 12, (i) * 32 + 12 + 120*h, 32, 32)
+                    }
+                }
+            }
         }
-
     }
 
     function collide(piece, x, y, rotation) {
@@ -359,21 +366,21 @@ function startTetris() {
         return false;
     }
 
-    function tryWallKicks(rotation1, rotation2){
+    function tryWallKicks(rotation1, rotation2) {
         if (piece == "I") {
-            for (let i = 0; i < i_wallkicks[rotation1+"-"+rotation2].length; i++) {
-                const coords = i_wallkicks[rotation1+"-"+rotation2][i];
-                if (!collide(piece, pieceX+coords[0], pieceY+coords[1], rotation2)) {
+            for (let i = 0; i < i_wallkicks[rotation1 + "-" + rotation2].length; i++) {
+                const coords = i_wallkicks[rotation1 + "-" + rotation2][i];
+                if (!collide(piece, pieceX + coords[0], pieceY + coords[1], rotation2)) {
                     pieceX += coords[0]
                     pieceY += coords[1]
                     return true;
                 }
             }
         }
-        else{
-            for (let i = 0; i < wallkicks[rotation1+"-"+rotation2].length; i++) {
-                const coords = wallkicks[rotation1+"-"+rotation2][i];
-                if (!collide(piece, pieceX+coords[0], pieceY-coords[1], rotation2)) {
+        else {
+            for (let i = 0; i < wallkicks[rotation1 + "-" + rotation2].length; i++) {
+                const coords = wallkicks[rotation1 + "-" + rotation2][i];
+                if (!collide(piece, pieceX + coords[0], pieceY - coords[1], rotation2)) {
                     pieceX += coords[0]
                     pieceY -= coords[1]
                     return true;
@@ -468,16 +475,16 @@ function startTetris() {
         }
         var linesCleared = 0;
         for (let i = board.length - 1; i >= 0; i--) {
-            if(board[i].every(column=>column != 0)){
+            if (board[i].every(column => column != 0)) {
                 board.splice(i, 1);
                 linesCleared++;
-            }  
+            }
         }
-        return linesCleared;        
+        return linesCleared;
     }
 
     function sendLines(linesCleared, mini, tspin) {
-        
+
         if (linesCleared == 0) {
             combo = 0;
             return 0;
@@ -491,17 +498,17 @@ function startTetris() {
         if (tspin && !mini) {
             lines_sent += linesCleared * 2;
         }
-        else if(linesCleared <=3){
-            lines_sent += linesCleared - 1; 
+        else if (linesCleared <= 3) {
+            lines_sent += linesCleared - 1;
         }
 
-        if ( tspin || linesCleared == 4) {
+        if (tspin || linesCleared == 4) {
             if (b2b) {
                 lines_sent += 1
             }
             b2b = true;
         }
-        else{
+        else {
             b2b = false;
         }
 
@@ -536,7 +543,7 @@ function startTetris() {
             }
         }
     }
-    
+
     function clockwise() {
         if (rotation < 3) {
             rotation++;
@@ -554,58 +561,58 @@ function startTetris() {
     }
 
     function rotate_right() {
-        if (collide(piece, pieceX, pieceY, (rotation+1) % 4)) {
-            if (tryWallKicks(rotation, (rotation+1) % 4)) {
+        if (collide(piece, pieceX, pieceY, (rotation + 1) % 4)) {
+            if (tryWallKicks(rotation, (rotation + 1) % 4)) {
                 clockwise();
                 lastMoveRotate = true;
-                if(collide(piece, pieceX, pieceY-1, rotation)){
+                if (collide(piece, pieceX, pieceY - 1, rotation)) {
                     gravity = 0;
                 }
             }
         }
-        else{
+        else {
             clockwise();
             lastMoveRotate = true;
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
     }
 
     function rotate_left() {
-        if (collide(piece, pieceX, pieceY, (rotation+3) % 4)) {
-            if (tryWallKicks(rotation, (rotation+3) % 4)) {
+        if (collide(piece, pieceX, pieceY, (rotation + 3) % 4)) {
+            if (tryWallKicks(rotation, (rotation + 3) % 4)) {
                 counterclockwise();
                 lastMoveRotate = true;
-                if(collide(piece, pieceX, pieceY-1, rotation)){
+                if (collide(piece, pieceX, pieceY - 1, rotation)) {
                     gravity = 0;
                 }
             }
         }
-        else{
+        else {
             counterclockwise();
             lastMoveRotate = true;
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
     }
 
     function move_left() {
-        if(!collide(piece, pieceX-1, pieceY, rotation)){
+        if (!collide(piece, pieceX - 1, pieceY, rotation)) {
             pieceX--;
             lastMoveRotate = false;
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
     }
 
     function move_right() {
-        if(!collide(piece, pieceX+1, pieceY, rotation)){
+        if (!collide(piece, pieceX + 1, pieceY, rotation)) {
             pieceX++;
             lastMoveRotate = false;
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
@@ -617,15 +624,15 @@ function startTetris() {
         }
         placePiece();
         lastMoveRotate = false;
-        gravity=0;
+        gravity = 0;
     }
 
     function softdrop() {
-        if(!collide(piece, pieceX, pieceY-1, rotation)){
+        if (!collide(piece, pieceX, pieceY - 1, rotation)) {
             pieceY--;
             lastMoveRotate = false;
             gravity = 0;
-        }   
+        }
     }
 
     function hold() {
@@ -633,8 +640,8 @@ function startTetris() {
             held = piece;
             spawnPiece();
         }
-        else{
-            [held, piece] = [piece,held]
+        else {
+            [held, piece] = [piece, held]
             initPiecePos();
         }
     }
@@ -746,20 +753,20 @@ function startPuyo() {
         "#0000FF",
         "#AA00FE",
     ];
-   
-    const wallkicks={
-        "0-1":[[-1,0]],
-        "1-0":[[0,0]],
-        "1-2":[[0,1]],
-        "2-1":[[1,0]],
-        "2-3":[[1,0]],
-        "3-2":[[0,1]],
-        "3-0":[[0,0]],
-        "0-3":[[1,0]]
+
+    const wallkicks = {
+        "0-1": [[-1, 0]],
+        "1-0": [[0, 0]],
+        "1-2": [[0, 1]],
+        "2-1": [[1, 0]],
+        "2-3": [[1, 0]],
+        "3-2": [[0, 1]],
+        "3-0": [[0, 0]],
+        "0-3": [[1, 0]]
     }
 
     const chain_table = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6];
-    const empty_line = [0,0,0,0,0,0]
+    const empty_line = [0, 0, 0, 0, 0, 0]
     var board
     var piece
     var held
@@ -779,21 +786,21 @@ function startPuyo() {
     var queueWidth = queueCanvas.width;
     var queueHeight = queueCanvas.height;
     var queueContext = queueCanvas.getContext("2d")
-    var controls = {"move_left":[37,"ArrowLeft"],"move_right":[39,"ArrowRight"],"rotate_left":[65,"a"],"rotate_right":[38,"ArrowUp"],"rotate_180":[16,"Shift"],"softdrop":[40,"ArrowDown"],"harddrop":[32,"Spacebar"],"hold":[68,"d"],"restart":[82,"r"], "DAS": 67, "ARR": 10, "grav_ARR":0}
+    var controls = { "move_left": [37, "ArrowLeft"], "move_right": [39, "ArrowRight"], "rotate_left": [65, "a"], "rotate_right": [38, "ArrowUp"], "rotate_180": [16, "Shift"], "softdrop": [40, "ArrowDown"], "harddrop": [32, "Spacebar"], "hold": [68, "d"], "restart": [82, "r"], "DAS": 67, "ARR": 10, "grav_ARR": 0 }
     var allclear
 
 
     function init() {
-        allclear= false
+        allclear = false
         board = [];
         queue = generateQueue();
         piece = queue.shift();
         held = null;
         rotation = 0;
         initPiecePos();
-console.log(piece); 
-    
-render();
+        console.log(piece);
+
+        render();
     }
 
     function shuffleArray(array) {
@@ -810,17 +817,17 @@ render();
         }
         return array;
     }
-    function genPuyo(){
+    function genPuyo() {
 
-return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
+        return [Math.floor(Math.random() * 5) + 2, Math.floor(Math.random() * 5) + 2]
     }
 
     function generateQueue() {
         bag = [];
         for (let i = 0; i < 7; i++) {
             bag.push(genPuyo())
-        
-            
+
+
         }
         return bag;
     }
@@ -835,12 +842,12 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
         boardContext.fillStyle = "#000000";
         boardContext.fillRect(0, 0, boardWidth, boardHeight)
         pieceMatrix = generatePieceMatrix(piece, rotation)
-        
+
         for (let i = 0; i < pieceMatrix.length; i++) {
             for (let j = 0; j < pieceMatrix[i].length; j++) {
                 if (pieceMatrix[i][j] != 0 && pieceMatrix[i][j] != 9) {
                     boardContext.fillStyle = colors[pieceMatrix[i][j]];
-                    boardContext.fillRect((j + pieceX) * (640/12), 640 - (pieceY - i) * (640/12), (640/12), (640/12))
+                    boardContext.fillRect((j + pieceX) * (640 / 12), 640 - (pieceY - i) * (640 / 12), (640 / 12), (640 / 12))
                 }
             }
         }
@@ -848,38 +855,45 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
             for (let j = 0; j < board[i].length; j++) {
                 if (board[i][j] != 0) {
                     boardContext.fillStyle = colors[board[i][j]];
-                    boardContext.fillRect((j) * (640/12), 640 - (i) * (640/12), (640/12), (640/12))
+                    boardContext.fillRect((j) * (640 / 12), 640 - (i) * (640 / 12), (640 / 12), (640 / 12))
                 }
             }
         }
         if (held) {
-                  holdContext.fillStyle = "#000000";
-        holdContext.fillRect(0,0,holdWidth,holdHeight);
-        holdMatrix = generatePieceMatrix(held, 0);
-        for (let i = 0; i < holdMatrix.length; i++) {
-            for (let j = 0; j < holdMatrix[i].length; j++) {
-                if (holdMatrix[i][j] != 0) {
-                    holdContext.fillStyle = colors[holdMatrix[i][j]];
-                    holdContext.fillRect((j) * (640/12) + 12, (i) * (640/12) + 12, (640/12), (640/12))
+            holdContext.fillStyle = "#000000";
+            holdContext.fillRect(0, 0, holdWidth, holdHeight);
+            holdMatrix = generatePieceMatrix(held, 0);
+            for (let i = 0; i < holdMatrix.length; i++) {
+                for (let j = 0; j < holdMatrix[i].length; j++) {
+                    if (holdMatrix[i][j] != 0) {
+                        holdContext.fillStyle = colors[holdMatrix[i][j]];
+                        holdContext.fillRect((j) * (640 / 12) + 12, (i) * (640 / 12) + 12, (640 / 12), (640 / 12))
+                    }
                 }
             }
-        }  
         }
 
 
         queueContext.fillStyle = "#000000";
-        queueContext.fillRect(0,0,queueWidth,queueHeight);
+        queueContext.fillRect(0, 0, queueWidth, queueHeight);
         for (let h = 0; h < queue.length; h++) {
             queueMatrix = generatePieceMatrix(queue[h])
+            for (let i = 0; i < queueMatrix.length; i++) {
+                for (let j = 0; j < queueMatrix[i].length; j++) {
+                    if (queueMatrix[i][j] != 0 && queueMatrix[i][j] != 9) {
+                        queueContext.fillStyle = colors[queueMatrix[i][j]];
+                        queueContext.fillRect((j) * (640/12) + 12, (i) * (640/12) + 12 + 120*h, (640/12), (640/12))
+                    }
+                }
+            }
         }
-
     }
 
     function collide(piece, x, y, rotation) {
         pieceMatrix = generatePieceMatrix(piece, rotation)
         for (let i = 0; i < pieceMatrix.length; i++) {
             for (let j = 0; j < pieceMatrix[i].length; j++) {
-                if (pieceMatrix[i][j] == 0 ) {
+                if (pieceMatrix[i][j] == 0) {
                     continue;
                 }
                 if (j + x < 0 || j + x > 5) {
@@ -898,25 +912,25 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
         return false;
     }
 
-    function tryWallKicks(rotation1, rotation2){
-       
-            for (let i = 0; i < wallkicks[rotation1+"-"+rotation2].length; i++) {
-                const coords = wallkicks[rotation1+"-"+rotation2][i];
-                if (!collide(piece, pieceX+coords[0], pieceY-coords[1], rotation2)) {
-                    pieceX += coords[0]
-                    pieceY -= coords[1]
-                    return true;
-                }
+    function tryWallKicks(rotation1, rotation2) {
+
+        for (let i = 0; i < wallkicks[rotation1 + "-" + rotation2].length; i++) {
+            const coords = wallkicks[rotation1 + "-" + rotation2][i];
+            if (!collide(piece, pieceX + coords[0], pieceY - coords[1], rotation2)) {
+                pieceX += coords[0]
+                pieceY -= coords[1]
+                return true;
             }
-        
+        }
+
         return false;
     }
 
     function generatePieceMatrix(piece, rotation) {
         tempMatrix = [
-            [0,piece[0],0],
-            [0,piece[1],0],
-            [0,0,0]
+            [0, piece[0], 0],
+            [0, piece[1], 0],
+            [0, 0, 0]
         ]
         for (let i = 0; i < rotation; i++) {
             rotateMatrix(tempMatrix);
@@ -960,7 +974,7 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
     }
 
     function placePiece() {
-        
+
         pieceMatrix = generatePieceMatrix(piece, rotation)
         for (let i = 0; i < pieceMatrix.length; i++) {
             for (let j = 0; j < pieceMatrix[i].length; j++) {
@@ -972,7 +986,7 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
                 }
             }
         }
-        
+
         applyGravity()
 
         //linesCleared = clearLines();
@@ -981,19 +995,19 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
         spawnPiece();
         render();
     }
-    function applyGravity(){
+    function applyGravity() {
         for (let i = 0; i < board.length; i++) {
             for (let j = 0; j < board[i].length; j++) {
-                if (board[i][j]!= 0 && i != 0) {
-                    tempY=i
-                    while (board[tempY-1][j] == 0 && tempY > 1) {
+                if (board[i][j] != 0 && i != 0) {
+                    tempY = i
+                    while (board[tempY - 1][j] == 0 && tempY > 1) {
                         tempY--
                     }
                     if (tempY != i) {
-                         board[tempY][j]=board[i][j]
-                    board[i][j]=0
+                        board[tempY][j] = board[i][j]
+                        board[i][j] = 0
                     }
-                   
+
 
                 }
             }
@@ -1005,16 +1019,16 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
         }
         var linesCleared = 0;
         for (let i = board.length - 1; i >= 0; i--) {
-            if(board[i].every(column=>column != 0)){
+            if (board[i].every(column => column != 0)) {
                 board.splice(i, 1);
                 linesCleared++;
-            }  
+            }
         }
-        return linesCleared;        
+        return linesCleared;
     }
 
     function sendLines(linesCleared, mini, tspin) {
-        
+
         if (linesCleared == 0) {
             combo = 0;
             return 0;
@@ -1028,17 +1042,17 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
         if (tspin && !mini) {
             lines_sent += linesCleared * 2;
         }
-        else if(linesCleared <=3){
-            lines_sent += linesCleared - 1; 
+        else if (linesCleared <= 3) {
+            lines_sent += linesCleared - 1;
         }
 
-        if ( tspin || linesCleared == 4) {
+        if (tspin || linesCleared == 4) {
             if (b2b) {
                 lines_sent += 1
             }
             b2b = true;
         }
-        else{
+        else {
             b2b = false;
         }
 
@@ -1073,7 +1087,7 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
             }
         }
     }
-    
+
     function clockwise() {
         if (rotation < 3) {
             rotation++;
@@ -1091,53 +1105,53 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
     }
 
     function rotate_right() {
-        if (collide(piece, pieceX, pieceY, (rotation+1) % 4)) {
-            if (tryWallKicks(rotation, (rotation+1) % 4)) {
+        if (collide(piece, pieceX, pieceY, (rotation + 1) % 4)) {
+            if (tryWallKicks(rotation, (rotation + 1) % 4)) {
                 clockwise();
 
-                if(collide(piece, pieceX, pieceY-1, rotation)){
+                if (collide(piece, pieceX, pieceY - 1, rotation)) {
                     gravity = 0;
                 }
             }
         }
-        else{
+        else {
             clockwise();
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
     }
 
     function rotate_left() {
-        if (collide(piece, pieceX, pieceY, (rotation+3) % 4)) {
-            if (tryWallKicks(rotation, (rotation+3) % 4)) {
+        if (collide(piece, pieceX, pieceY, (rotation + 3) % 4)) {
+            if (tryWallKicks(rotation, (rotation + 3) % 4)) {
                 counterclockwise();
-                if(collide(piece, pieceX, pieceY-1, rotation)){
+                if (collide(piece, pieceX, pieceY - 1, rotation)) {
                     gravity = 0;
                 }
             }
         }
-        else{
+        else {
             counterclockwise();
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
     }
 
     function move_left() {
-        if(!collide(piece, pieceX-1, pieceY, rotation)){
+        if (!collide(piece, pieceX - 1, pieceY, rotation)) {
             pieceX--;
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
     }
 
     function move_right() {
-        if(!collide(piece, pieceX+1, pieceY, rotation)){
+        if (!collide(piece, pieceX + 1, pieceY, rotation)) {
             pieceX++;
-            if(collide(piece, pieceX, pieceY-1, rotation)){
+            if (collide(piece, pieceX, pieceY - 1, rotation)) {
                 gravity = 0;
             }
         }
@@ -1148,14 +1162,14 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
             pieceY--;
         }
         placePiece();
-        gravity=0;
+        gravity = 0;
     }
 
     function softdrop() {
-        if(!collide(piece, pieceX, pieceY-1, rotation)){
+        if (!collide(piece, pieceX, pieceY - 1, rotation)) {
             pieceY--;
             gravity = 0;
-        }   
+        }
     }
 
     function hold() {
@@ -1163,8 +1177,8 @@ return [Math.floor(Math.random()*5)+2,Math.floor(Math.random()*5)+2]
             held = piece;
             spawnPiece();
         }
-        else{
-            [held, piece] = [piece,held]
+        else {
+            [held, piece] = [piece, held]
             initPiecePos();
         }
     }
