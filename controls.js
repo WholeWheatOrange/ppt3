@@ -35,6 +35,10 @@ for (let i = 0; i < inputs.length; i++) {
     element.textContent = controls[element.id][1]
 }
 
+    var numInputs = document.getElementsByTagName("input")
+    for (var i = 0; i < numInputs.length; i++) {
+numInputs[i].value = controls[numInputs[i].id]
+    }
 function openModal() {
     console.log('open')
     modal.style.display = 'block';
