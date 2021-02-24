@@ -17,7 +17,7 @@ app.use(
 // viewed at http://localhost:3000
 
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname + "/html/index.html"));
+  res.sendFile(path.join(__dirname + "/index.html"));
 });
 
 
