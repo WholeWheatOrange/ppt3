@@ -1341,7 +1341,9 @@ function startPuyo() {
       } else if (rotatePressed) {
 rotate_180()
 rotatePressed = false
-    }
+    } else if (rotatePressed == false) {
+        rotatePressed = true
+      }
     } else {
       rotatePressed = true;
       clockwise();
@@ -1362,6 +1364,8 @@ rotatePressed = false
       } else if (rotatePressed) {
         rotate_180();
         rotatePressed = false;
+      } else if (!rotatePressed) {
+          rotatePressed = true
       }
     } else {
       counterclockwise();
@@ -1374,6 +1378,18 @@ rotatePressed = false
   function rotate_180() {
     clockwise();
     clockwise();
+    if (rotation == 0) {
+        pieceY++
+    }
+    else if (rotation == 1) {
+        pieceX++
+    }
+    else if (rotation == 2) {
+        pieceY--
+    }
+    else if (rotation == 3) {
+        pieceX--
+    }
 
     if (collide(piece, pieceX, pieceY - 1, rotation)) {
       gravity = 0;
