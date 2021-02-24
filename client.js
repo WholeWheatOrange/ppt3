@@ -1051,12 +1051,12 @@ function startPuyo() {
                 !collide(
                     piece,
                     pieceX + coords[0],
-                    pieceY - coords[1],
+                    pieceY + coords[1],
                     rotation2
                 )
             ) {
                 pieceX += coords[0];
-                pieceY -= coords[1];
+                pieceY += coords[1];
                 return true;
             }
         }
@@ -1156,6 +1156,9 @@ function startPuyo() {
                 if (board[i][j] != 0) {
                     puyoColor = board[i][j]
                     puyosCleared = floodFill(i, j, puyoColor, tempBoard)
+                    if(puyosCleared>1){
+                        console.log(puyosCleared);
+                    }
                     if (puyosCleared >= 4) {
                         floodFill(i, j, puyoColor, board)
                         totalCleared += puyosCleared
