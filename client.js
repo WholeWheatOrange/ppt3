@@ -907,7 +907,7 @@ function startPuyo() {
         grav_ARR: 0,
     };
     var allclear;
-
+var totalClearedGlobal 
     function init() {
         allclear = false;
         board = [];
@@ -917,7 +917,7 @@ function startPuyo() {
         rotation = 0;
         initPiecePos();
         console.log(piece);
-
+totalClearedGlobal = 0
         render();
     }
 
@@ -1220,6 +1220,8 @@ function startPuyo() {
             groupBonus += tempArray[2]
             chain++
         }
+        totalClearedGlobal += totalPuyos
+        console.log("total puyos cleared: " + totalClearedGlobal)
         totalColors = [...new Set(totalColors)]
         score = (10 * totalPuyos) * (chainBonusTable[chain] + groupBonus + colorBonusTable[totalColors.length])
         lines_sent = score / 70
