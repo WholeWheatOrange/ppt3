@@ -908,6 +908,7 @@ function startPuyo() {
     };
     var allclear;
 var totalClearedGlobal 
+var startTime
     function init() {
         allclear = false;
         board = [];
@@ -918,6 +919,7 @@ var totalClearedGlobal
         initPiecePos();
         console.log(piece);
 totalClearedGlobal = 0
+startTime = new Date().getTime()
         render();
     }
 
@@ -1200,6 +1202,17 @@ totalClearedGlobal = 0
         filledIn += floodFill(i, j - 1, color, matrix)
         return filledIn
     }
+    
+function msToTime(s) {
+  var ms = s % 1000;
+  s = (s - ms) / 1000;
+  var secs = s % 60;
+  s = (s - secs) / 60;
+  var mins = s % 60;
+  var hrs = (s - mins) / 60;
+
+  return hrs + ':' + mins + ':' + secs + '.' + ms;
+}
     function clearLines() {
         if (board.length == 0) {
             return 0;
@@ -1222,6 +1235,9 @@ totalClearedGlobal = 0
         }
         totalClearedGlobal += totalPuyos
         console.log("total puyos cleared: " + totalClearedGlobal)
+        if (totalClearedGlobal >= 200) {
+console.log("cleared 200 puyos in:" + msToTime(new Date().getTime() - startTime))
+        }
         totalColors = [...new Set(totalColors)]
         score = (10 * totalPuyos) * (chainBonusTable[chain] + groupBonus + colorBonusTable[totalColors.length])
         lines_sent = score / 70
