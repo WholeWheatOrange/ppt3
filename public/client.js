@@ -1,3 +1,6 @@
+
+const socket = io("wss://" + window.location.host);
+const garbageConversion = [0, 4, 5, 6, 8, 10, 13, 16, 20, 24, 28, 33, 38, 43, 49, 55, 61, 68, 75, 83, 92, 102, 113, 125, 138, 152, 167, 183, 200, 218, 237]
 function startTetris() {
   document.getElementById("selectionButtons").style.display = "none";
 
@@ -13,7 +16,7 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
     "#00EA01",
     "#00DDFF",
     "#0000FF",
-    "#AA00FE",
+    "#CC00FE",
   ];
   const piece_matrix = {
     Z: [
@@ -250,6 +253,7 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
   var b2b;
   var combo;
   var canHold;
+  var trashReceived
 
   function init() {
     board = [];
@@ -262,7 +266,7 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
     lastMoveRotate = false;
     combo = 0;
     b2b = false;
-
+trashReceived = 0
     render();
   }
 
@@ -344,9 +348,9 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
       }
     }
 
-    if (held) {
       holdContext.fillStyle = "#000000";
       holdContext.fillRect(0, 0, holdWidth, holdHeight);
+    if (held) {
       holdMatrix = generatePieceMatrix(held, 0);
       for (let i = 0; i < holdMatrix.length; i++) {
         for (let j = 0; j < holdMatrix[i].length; j++) {
@@ -502,14 +506,44 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
       tspin = true;
     }
     linesCleared = clearLines();
+    if (linesCleared == 0) {
+      spawnGarbage()
+    } else {
+      
     lines_sent = sendLines(linesCleared, mini, tspin);
     console.log("Lines sent: " + lines_sent);
+    trashSent = garbageConversion[lines_sent]
+      socket.emit("sendLines", trashSent)
+  }
+    
     removeExcessLines();
     spawnPiece();
     canHold = true;
     render();
+    socket.emit("sendBoard", board)
   }
-
+function spawnGarbage() {
+    if (linesReceived <= 0) {
+      return
+    }
+    // y = k ** x - k
+    var hole = Math.floor(Math.random() * 10)
+    var volatility = 2
+    var consecutiveLines = 0
+    for (var i = 0; i < linesReceived; i++) {
+      tempLine = new Array(10).fill(1)
+      tempLine[hole] = 0
+      board.unshift(tempLine)
+      if (((volatility ** consecutiveLines) - volatility) * .01 < Math.random()) {
+        consecutiveLines = 0
+        hole = Math.floor(Math.random() * 10)
+      } else {
+        consecutiveLines++
+      }
+      
+    }
+    linesReceived = 0
+}
   function clearLines() {
     if (board.length == 0) {
       return 0;
@@ -591,6 +625,7 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
       if (controls[keys[i]][0] == parseInt(key)) {
         move_type = keys[i];
         eval(move_type + "()");
+        socket.emit("sendPieceData", [piece, pieceX, pieceY, rotation])
         render();
       }
     }
@@ -696,7 +731,7 @@ function rotate_180() {
   }
 
   function hold() {
-    if (canHold == false) {
+    if (!canHold) {
       return;
     }
 
@@ -713,6 +748,14 @@ function rotate_180() {
   function restart() {
     init();
   }
+
+  socket.on("receiveLines", (target, amount) => {
+    if (target == socket.id) {
+      
+      receivedLines += Math.max.apply(Math, garbageConversion.filter(function(x) { return x <= amount}))
+    }
+    
+  })
 
   init();
 
@@ -791,8 +834,16 @@ function rotate_180() {
         }
       } else if (keys[i] == controls["softdrop"][0]) {
         if (new Date().getTime() - keyDict[keys[i]][1] >= controls.grav_ARR) {
-          move(keys[i]);
+            
+            if (controls.grav_ARR == 0) {
+              for (var mov = 0; mov < 22; mov++) {
+                move(keys[i]);
+              }
+            } else {
+              move(keys[i]);
+              
           keyDict[keys[i]][1] = new Date().getTime();
+            }
         }
       }
     }
@@ -817,7 +868,7 @@ controls = JSON.parse(controls)
 
     "#00EA01",
     "#0000FF",
-    "#AA00FE",
+    "#CC00FE",
   ];
 
   const wallkicks = {
@@ -940,7 +991,9 @@ controls = JSON.parse(controls)
   var rotatePressed;
   var totalClearedGlobal;
   var startTime;
+  var trashReceived
   function init() {
+    trashReceived = 0
     allclear = false;
     rotatePressed = false;
     canHold = true;
@@ -1022,9 +1075,10 @@ controls = JSON.parse(controls)
         }
       }
     }
-    if (held) {
+
       holdContext.fillStyle = "#000000";
       holdContext.fillRect(0, 0, holdWidth, holdHeight);
+    if (held) {
       holdMatrix = generatePieceMatrix(held, 0);
       for (let i = 0; i < holdMatrix.length; i++) {
         for (let j = 0; j < holdMatrix[i].length; j++) {
@@ -1156,18 +1210,21 @@ controls = JSON.parse(controls)
       }
     }
 
-    applyGravity();
     lines_sent = clearLines();
     console.log("Lines sent: " + lines_sent);
     removeExcessLines();
     spawnPiece();
     canHold = true;
     render();
+    
+    socket.emit("sendBoard", board)
   }
   function applyGravity() {
+      coordinates = []
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board[i].length; j++) {
         if (board[i][j] != 0 && i != 0) {
+            coordinates.push([i, j])
           tempY = i;
           while (board[tempY - 1][j] == 0 && tempY > 1) {
             tempY--;
@@ -1179,14 +1236,16 @@ controls = JSON.parse(controls)
         }
       }
     }
+    return coordinates
   }
-  function tryChain() {
+  function tryChain(coordinates) {
     tempBoard = board.map((row) => [...row]);
     totalCleared = 0;
     totalColors = [];
     groupBonus = 0;
-    for (let i = 0; i < board.length; i++) {
-      for (let j = 0; j < board[i].length; j++) {
+    for (let k = 0; k < coordinates; k++) {
+        i = coordinates[k][0]
+        j = coordinates[k][1]
         if (board[i][j] != 0) {
           puyoColor = board[i][j];
           puyosCleared = floodFill(i, j, puyoColor, tempBoard);
@@ -1199,7 +1258,6 @@ controls = JSON.parse(controls)
             totalColors.push(puyoColor);
             groupBonus += groupBonusTable[puyosCleared];
           }
-        }
       } //  :)
     }
     console.log(tempBoard);
@@ -1241,15 +1299,16 @@ controls = JSON.parse(controls)
     }
 
     chain = 0;
-    tempArray = tryChain();
-    applyGravity();
+
+var coordinates =    applyGravity();
+    tempArray = tryChain(coordinates);
     var totalColors = tempArray[0];
     var totalPuyos = tempArray[1];
     var groupBonus = tempArray[2];
 
     while (tempArray[1] != 0) {
-      tempArray = tryChain();
-      applyGravity();
+coordinates = applyGravity()
+        tempArray = tryChain(coordinates);
       totalColors.push(...tempArray[0]);
       totalPuyos += tempArray[1];
       groupBonus += tempArray[2];
@@ -1313,6 +1372,8 @@ controls = JSON.parse(controls)
         move_type = keys[i];
         eval(move_type + "()");
         render();
+        
+    socket.emit("sendPieceData", [piece, pieceX, pieceY, rotation])
       }
     }
   }
@@ -1450,6 +1511,13 @@ rotatePressed = false
   function restart() {
     init();
   }
+  
+  socket.on("receiveLines", (target, amount) => {
+    if (target == socket.id) {
+      receivedLines += amount
+    }
+    
+  })
 
   init();
 
@@ -1475,8 +1543,8 @@ rotatePressed = false
   });
   const gravityDelay = 60;
   var gravity = 0;
-  var rotatePressDelay = 10
-  var rotatePressCounter = 0
+  var rotatePressedDelay = 10
+  var rotatePressedCounter = 0
   loop = setInterval(() => {
     var keys = Object.keys(keyDict);
     leftRight = 0;
@@ -1529,8 +1597,17 @@ rotatePressed = false
         }
       } else if (keys[i] == controls["softdrop"][0]) {
         if (new Date().getTime() - keyDict[keys[i]][1] >= controls.grav_ARR) {
-          move(keys[i]);
+            
+            if (controls.grav_ARR == 0) {
+              for (var mov = 0; mov < 13; mov++) {
+                move(keys[i]);
+              }
+            } else {
+              move(keys[i]);
+              
           keyDict[keys[i]][1] = new Date().getTime();
+            }
+        
         }
       }
     }
