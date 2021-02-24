@@ -552,9 +552,18 @@ function startTetris() {
         return linesCleared;
     }
     function removeExcessLines() {
-        testRow = board.length;
+        testRow = board.length-1;
+        if(testRow<=0){
+            return
+        }
+
         while (board[testRow].every((column) => column == 0)) {
             board.splice(testRow, 1);
+            testRow--
+            if(testRow<0){
+                return
+            }
+
         }
     }
 
@@ -821,7 +830,7 @@ function startPuyo() {
         "#000000",
         "#555555",
         "#FF0100",
-        "#FFFE02",
+        
         "#00EA01",
         "#0000FF",
         "#AA00FE",
@@ -928,8 +937,8 @@ function startPuyo() {
     }
     function genPuyo() {
         return [
-            Math.floor(Math.random() * 5) + 2,
-            Math.floor(Math.random() * 5) + 2,
+            Math.floor(Math.random() * 4) + 2,
+            Math.floor(Math.random() * 4) + 2,
         ];
     }
 
@@ -1156,9 +1165,9 @@ function startPuyo() {
                 if (board[i][j] != 0) {
                     puyoColor = board[i][j]
                     puyosCleared = floodFill(i, j, puyoColor, tempBoard)
-                    if(puyosCleared>1){
+                    
                         console.log(puyosCleared);
-                    }
+                    
                     if (puyosCleared >= 4) {
                         floodFill(i, j, puyoColor, board)
                         totalCleared += puyosCleared
@@ -1167,8 +1176,9 @@ function startPuyo() {
                     }
                     
                 }
-            }
+            }//  :)
         }
+        console.log(tempBoard)
         return [totalColors, totalCleared, groupBonus]
     }
     function floodFill(i, j, color, matrix) {
@@ -1182,13 +1192,13 @@ function startPuyo() {
             return 0
         }
         matrix[i][j] = 0
-        filledIn = 0
-        filledIn += floodFill(i + 1, j, color)
+        filledIn = 1
+        filledIn += floodFill(i + 1, j, color, matrix)
         
-        filledIn += floodFill(i - 1, j, color)
-        filledIn += floodFill(i, j + 1, color)
-        filledIn += floodFill(i, j - 1, color)
-        return fillIn
+        filledIn += floodFill(i - 1, j, color, matrix)
+        filledIn += floodFill(i, j + 1, color, matrix)
+        filledIn += floodFill(i, j - 1, color, matrix)
+        return filledIn
     }
     function clearLines() {
         if (board.length == 0) {
@@ -1197,9 +1207,14 @@ function startPuyo() {
 
         chain = 0
         tempArray = tryChain()
-        [totalColors, totalPuyos, groupBonus] = tempArray
-        while (tempArray[2] != 0) {
+        applyGravity()
+        var totalColors=tempArray[0]
+        var totalPuyos=tempArray[1]
+        var groupBonus=tempArray[2]
+        
+        while (tempArray[1] != 0) {
             tempArray = tryChain()
+            applyGravity()  
             totalColors.push(...tempArray[0])
             totalPuyos += tempArray[1]
             groupBonus += tempArray[2]
@@ -1219,9 +1234,18 @@ function startPuyo() {
         return lines_sent;
     }
     function removeExcessLines() {
-        testRow = board.length;
+        testRow = board.length-1;
+        if(testRow<=0){
+            return
+        }
+
         while (board[testRow].every((column) => column == 0)) {
             board.splice(testRow, 1);
+            testRow--
+            if(testRow<0){
+                return
+            }
+
         }
     }
 
