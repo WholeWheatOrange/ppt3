@@ -253,7 +253,7 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
   var b2b;
   var combo;
   var canHold;
-  var trashReceived
+  var linesReceived
 
   function init() {
     board = [];
@@ -266,7 +266,7 @@ const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
     lastMoveRotate = false;
     combo = 0;
     b2b = false;
-trashReceived = 0
+linesReceived = 0
     render();
   }
 
