@@ -238,7 +238,7 @@ function startTetris() {
   var boardWidth = boardCanvas.width;
   var boardHeight = boardCanvas.height;
   var boardContext = boardCanvas.getContext("2d");
-  var holdCanvas = document.getElementById("hold");
+  var holdCanvas = document.getElementById("holdCanvas");
   var holdWidth = holdCanvas.width;
   var holdHeight = holdCanvas.height;
   var holdContext = holdCanvas.getContext("2d");
@@ -923,7 +923,7 @@ function startPuyo() {
   var boardWidth = boardCanvas.width;
   var boardHeight = boardCanvas.height;
   var boardContext = boardCanvas.getContext("2d");
-  var holdCanvas = document.getElementById("hold");
+  var holdCanvas = document.getElementById("holdCanvas");
   var holdWidth = holdCanvas.width;
   var holdHeight = holdCanvas.height;
   var holdContext = holdCanvas.getContext("2d");
