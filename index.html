@@ -1,23 +1,128 @@
 <!DOCTYPE html>
 
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puyo Puyo Tetris 3</title>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
-    <script src="client.js" defer></script>
-</head>
-<body>
-    <div id="selectionButtons">
-       <button id="tetrisButton" onclick="startTetris()">Tetris</button>
-    <button id="puyoButton" onclick="startPuyo()">Puyo</button> 
-    </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Puyo Puyo Tetris 3</title>
+        <script
+            src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+            crossorigin="anonymous"
+        ></script>
+        <script src="client.js" defer></script>
+        <script src="controls.js" defer></script>
+        
+    </head>
+    <body>
+        <div id="selectionButtons">
+            <button id="tetrisButton" onclick="startTetris()">Tetris</button>
+            <button id="puyoButton" onclick="startPuyo()">Puyo</button>
 
-    <canvas id="hold" width="120" height="120"></canvas>
-    <canvas id="board" width="320" height="640"></canvas>
-    <canvas id="queue" width="120" height="720"></canvas>
+        <a href="#" onclick="openModal()">Controls</a>
+            <div class="modal" onclick="closeModal()" id="modal"></div>
+            <div class="modal-content" id="modal-content" style="display: none">
+                <div class="container" id="controls-container">
+                    <div class="control-label">Move Left:</div>
+                    <div class="control-input">
+                        <button
+                            id="move_left"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Move Right:</div>
+                    <div class="control-input">
+                        <button
+                            id="move_right"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Rotate Left:</div>
+                    <div class="control-input">
+                        <button
+                            id="rotate_left"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Rotate Right:</div>
+                    <div class="control-input">
+                        <button
+                            id="rotate_right"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Rotate 180:</div>
+                    <div class="control-input">
+                        <button
+                            id="rotate_180"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Soft Drop:</div>
+                    <div class="control-input">
+                        <button
+                            id="softdrop"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Hard Drop:</div>
+                    <div class="control-input">
+                        <button
+                            id="harddrop"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Hold:</div>
+                    <div class="control-input">
+                        <button
+                            id="hold"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">Restart:</div>
+                    <div class="control-input">
+                        <button
+                            id="restart"
+                            class="input-button"
+                            onclick="select(this)"
+                        ></button>
+                    </div>
+                    <div class="control-label">DAS:</div>
+                    <div class="control-input">
+                      <input type="number" id="das"></input>
+                        
+                    </div>
+                    
+                    <div class="control-label">ARR:</div>
+                    <div class="control-input">
+                      <input type="number" id="arr"></input>
+                        
+                    </div>
+                    
+                    <div class="control-label">Softdrop Speed:</div>
+                    <div class="control-input">
+                      <input type="number" id="grav_ARR"></input>
+                        
+                    </div>
+                </div>
+                <button onclick="saveControls(); closeModal()">save</button>
+                <button class="close-modal" onclick="closeModal()">
+                    close
+                </button>
+            </div>
+        </div>
 
-</body>
+        <canvas id="hold" width="120" height="120"></canvas>
+        <canvas id="board" width="320" height="640"></canvas>
+        <canvas id="queue" width="120" height="720"></canvas>
+    </body>
 </html>
