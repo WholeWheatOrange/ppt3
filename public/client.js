@@ -415,16 +415,20 @@ function startTetris() {
     otherContext.fillRect(0, 0, 320, 640);
     pieceData = otherPlayers[id].pieceData;
     pieceMatrix = generatePieceMatrix(pieceData[0], pieceData[3]);
+    scale = 32;
+    if (otherPlayers[id].isPuyo) {
+      scale = 640 / 12;
+    }
 
     for (let i = 0; i < pieceMatrix.length; i++) {
       for (let j = 0; j < pieceMatrix[i].length; j++) {
         if (pieceMatrix[i][j] != 0 && pieceMatrix[i][j] != 9) {
           otherContext.fillStyle = colors[pieceMatrix[i][j]];
           otherContext.fillRect(
-            (j + pieceX) * 32,
-            640 - (pieceY - i) * 32,
-            32,
-            32
+            (j + pieceX) * scale,
+            640 - (pieceY - i) * scale,
+            scale,
+            scale
           );
         }
       }
@@ -433,7 +437,7 @@ function startTetris() {
       for (let j = 0; j < otherPlayers[id].board[i].length; j++) {
         if (otherPlayers[id].board[i][j] != 0) {
           otherContext.fillStyle = colors[otherPlayers[id].board[i][j]];
-          otherContext.fillRect(j * 32, 640 - i * 32, 32, 32);
+          otherContext.fillRect(j * scale, 640 - i * scale, scale, scale);
         }
       }
     }
@@ -530,6 +534,8 @@ function startTetris() {
       placePiece();
     } else {
       pieceY--;
+
+      socket.emit("sendPieceData", [piece, pieceX, pieceY, rotation]);
       render();
       lastMoveRotate = false;
     }
@@ -572,6 +578,19 @@ function startTetris() {
       spawnGarbage();
     } else {
       lines_sent = sendLines(linesCleared, mini, tspin);
+      if (linesReceived > 0) {
+        if (lines_sent > linesReceived) {
+          lines_sent = lines_sent - linesReceived;
+          linesReceived = 0;
+        } else if (lines_sent < linesReceived) {
+          linesReceived = linesReceived - lines_sent;
+          lines_sent = 0;
+        } else {
+          lines_sent = 0;
+          linesReceived = 0;
+        }
+      }
+
       console.log("Lines sent: " + lines_sent);
       trashSent = garbageConversion[lines_sent];
       if (otherPlayers.length > 0) {
@@ -591,6 +610,7 @@ function startTetris() {
     if (linesReceived <= 0) {
       return;
     }
+
     // y = k ** x - k
     var hole = Math.floor(Math.random() * 10);
     var volatility = 2;
@@ -814,7 +834,7 @@ function startTetris() {
   function restart() {
     init();
   }
-var otherPlayers = {}
+  var otherPlayers = {};
 
   function addNewPlayer(id, pieceData) {
     var isPuyo = false;
@@ -824,7 +844,7 @@ var otherPlayers = {}
     tempCanvas = document.createElement("canvas");
     tempCanvas.width = 320;
     tempCanvas.height = 640;
-    document.appendChild(tempCanvas);
+    document.body.appendChild(tempCanvas);
     otherPlayers[id] = {
       board: [],
       pieceData: pieceData,
@@ -842,7 +862,7 @@ var otherPlayers = {}
       );
     }
   });
-  
+
   socket.on("receivePieceData", (sender, pieceData) => {
     if (sender == socket.id) {
       return;
@@ -1221,6 +1241,40 @@ function startPuyo() {
     }
   }
 
+  function renderOther(id) {
+    otherCanvas = otherPlayers[id].canvas;
+    otherContext = otherCanvas.getContext("2d");
+    otherContext.fillStyle = "#000000";
+    otherContext.fillRect(0, 0, 320, 640);
+    pieceData = otherPlayers[id].pieceData;
+    pieceMatrix = generatePieceMatrix(pieceData[0], pieceData[3]);
+    scale = 32;
+    if (otherPlayers[id].isPuyo) {
+      scale = 640 / 12;
+    }
+
+    for (let i = 0; i < pieceMatrix.length; i++) {
+      for (let j = 0; j < pieceMatrix[i].length; j++) {
+        if (pieceMatrix[i][j] != 0 && pieceMatrix[i][j] != 9) {
+          otherContext.fillStyle = colors[pieceMatrix[i][j]];
+          otherContext.fillRect(
+            (j + pieceX) * scale,
+            640 - (pieceY - i) * scale,
+            scale,
+            scale
+          );
+        }
+      }
+    }
+    for (let i = 0; i < otherPlayers[id].board.length; i++) {
+      for (let j = 0; j < otherPlayers[id].board[i].length; j++) {
+        if (otherPlayers[id].board[i][j] != 0) {
+          otherContext.fillStyle = colors[otherPlayers[id].board[i][j]];
+          otherContext.fillRect(j * scale, 640 - i * scale, scale, scale);
+        }
+      }
+    }
+  }
   function collide(piece, x, y, rotation) {
     pieceMatrix = generatePieceMatrix(piece, rotation);
     for (let i = 0; i < pieceMatrix.length; i++) {
@@ -1298,6 +1352,8 @@ function startPuyo() {
       placePiece();
     } else {
       pieceY--;
+
+      socket.emit("sendPieceData", [piece, pieceX, pieceY, rotation]);
       render();
       lastMoveRotate = false;
     }
@@ -1316,14 +1372,50 @@ function startPuyo() {
       }
     }
 
-    lines_sent = clearLines();
-    console.log("Lines sent: " + lines_sent);
+    trashSent = clearLines();
+
+    if (linesReceived > 0) {
+      if (trashSent > linesReceived) {
+        trashSent = trashSent - linesReceived;
+        linesReceived = 0;
+      } else if (trashSent < linesReceived) {
+        linesReceived = linesReceived - trashSent;
+        trashSent = 0;
+      } else {
+        trashSent = 0;
+        linesReceived = 0;
+      }
+    }
+    if (linesReceived > 0 ) {
+      spawnGarbage()
+    }
+    
+    if (otherPlayers.length > 0) {
+      targets = Object.keys(otherPlayers);
+      target = targets[Math.floor(Math.random() * otherPlayers.length)];
+      socket.emit("sendLines", target, trashSent);
+    }
+    console.log("trash sent: " + trashSent);
     removeExcessLines();
     spawnPiece();
     canHold = true;
     render();
 
     socket.emit("sendBoard", board);
+  }
+  function spawnGarbage() {
+    while (linesReceived > 5) {
+      var line = new Array(6).fill(1)
+board.push(line)
+      linesReceived -= 6
+    }
+    var line = new Array(6).fill(0)
+    for (var i = 0; i < linesReceived; i++) {
+      line[i] = 1
+    }
+    line =shuffleArray(line)
+    board.push(line)
+    applyGravity()
   }
   function applyGravity() {
     coordinates = [];
@@ -1624,7 +1716,7 @@ function startPuyo() {
     tempCanvas = document.createElement("canvas");
     tempCanvas.width = 320;
     tempCanvas.height = 640;
-    document.appendChild(tempCanvas);
+    document.body.appendChild(tempCanvas);
     otherPlayers[id] = {
       board: [],
       pieceData: pieceData,
