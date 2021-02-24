@@ -1,13 +1,9 @@
-var controls = localStorage.getItem("controls");
-
-setInterval(() => {
-    
- controls = localStorage.getItem("controls");
-}, 1000)
 function startTetris() {
   document.getElementById("selectionButtons").style.display = "none";
 
-  const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
+var controls = localStorage.getItem("controls");
+controls = JSON.parse(controls)
+const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
   const colors = [
     "#000000",
     "#555555",
@@ -810,6 +806,8 @@ function rotate_180() {
 
 function startPuyo() {
     
+var controls = localStorage.getItem("controls");
+controls = JSON.parse(controls)
   document.getElementById("selectionButtons").style.display = "none";
 
   const colors = [
