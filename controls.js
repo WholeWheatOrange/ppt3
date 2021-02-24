@@ -63,7 +63,7 @@ function closeModal() {
 function saveControls() {
     var numInputs = document.getElementsByTagName("input")
     for (var i = 0; i < numInputs.length; i++) {
-        controls[numInputs[i].id] = numInputs[i].value
+        controls[numInputs[i].id] = parseInt(numInputs[i].value)
     }
     
     localStorage.setItem('controls', JSON.stringify(controls));

@@ -1,6 +1,7 @@
-var controls = localStorage.getItem("controls");
 function startTetris() {
   document.getElementById("selectionButtons").style.display = "none";
+  
+var controls = localStorage.getItem("controls");
 
   const pieces = ["Z", "L", "O", "S", "I", "J", "T"];
   const colors = [
@@ -773,7 +774,7 @@ function rotate_180() {
             keyDict[keys[i]][1] == 0
           ) {
             if (controls.ARR == 0 && !keyDict[keys[i]][1] == 0) {
-              for (var mov = 0; mov < matrixWidth; mov++) {
+              for (var mov = 0; mov < 10; mov++) {
                 move(keys[i]);
               }
             } else {
@@ -804,6 +805,8 @@ function rotate_180() {
 }
 
 function startPuyo() {
+    
+var controls = localStorage.getItem("controls");
   document.getElementById("selectionButtons").style.display = "none";
 
   const colors = [
@@ -1379,16 +1382,16 @@ rotatePressed = false
     clockwise();
     clockwise();
     if (rotation == 0) {
-        pieceY++
-    }
-    else if (rotation == 1) {
-        pieceX++
-    }
-    else if (rotation == 2) {
         pieceY--
     }
-    else if (rotation == 3) {
+    else if (rotation == 1) {
         pieceX--
+    }
+    else if (rotation == 2) {
+        pieceY++
+    }
+    else if (rotation == 3) {
+        pieceX++
     }
 
     if (collide(piece, pieceX, pieceY - 1, rotation)) {
@@ -1508,7 +1511,7 @@ rotatePressed = false
             keyDict[keys[i]][1] == 0
           ) {
             if (controls.ARR == 0 && !keyDict[keys[i]][1] == 0) {
-              for (var mov = 0; mov < matrixWidth; mov++) {
+              for (var mov = 0; mov < 6; mov++) {
                 move(keys[i]);
               }
             } else {
