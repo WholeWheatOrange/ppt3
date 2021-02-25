@@ -1,4 +1,43 @@
 const socket = io("wss://" + window.location.host);
+
+const piece_matrix = {
+  Z: [
+    [2, 2, 0],
+    [0, 2, 2],
+    [0, 0, 0],
+  ],
+  L: [
+    [0, 0, 3],
+    [3, 3, 3],
+    [0, 0, 0],
+  ],
+  O: [
+    [4, 4],
+    [4, 4],
+  ],
+  S: [
+    [0, 5, 5],
+    [5, 5, 0],
+    [0, 0, 0],
+  ],
+  I: [
+    [0, 0, 0, 0],
+    [6, 6, 6, 6],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ],
+  J: [
+    [7, 0, 0],
+    [7, 7, 7],
+    [0, 0, 0],
+  ],
+  T: [
+    [9, 8, 9],
+    [8, 8, 8],
+    [0, 0, 0],
+  ],
+  null: [[0]],
+};
 const garbageConversion = [
   0,
   4,
@@ -49,44 +88,6 @@ function startTetris() {
     "#0000FF",
     "#CC00FE",
   ];
-  const piece_matrix = {
-    Z: [
-      [2, 2, 0],
-      [0, 2, 2],
-      [0, 0, 0],
-    ],
-    L: [
-      [0, 0, 3],
-      [3, 3, 3],
-      [0, 0, 0],
-    ],
-    O: [
-      [4, 4],
-      [4, 4],
-    ],
-    S: [
-      [0, 5, 5],
-      [5, 5, 0],
-      [0, 0, 0],
-    ],
-    I: [
-      [0, 0, 0, 0],
-      [6, 6, 6, 6],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ],
-    J: [
-      [7, 0, 0],
-      [7, 7, 7],
-      [0, 0, 0],
-    ],
-    T: [
-      [9, 8, 9],
-      [8, 8, 8],
-      [0, 0, 0],
-    ],
-    null: [[0]],
-  };
 
   const wallkicks = {
     "0-1": [
@@ -348,7 +349,7 @@ function startTetris() {
           boardContext.fillStyle = colors[pieceMatrix[i][j]];
           boardContext.fillRect(
             (j + pieceX) * 32,
-            640 - (tempY - i) * 32,
+            640 - (tempY - i) * 32 - 32,
             32,
             32
           );
@@ -363,7 +364,7 @@ function startTetris() {
           boardContext.fillStyle = colors[pieceMatrix[i][j]];
           boardContext.fillRect(
             (j + pieceX) * 32,
-            640 - (pieceY - i) * 32,
+            640 - (pieceY - i) * 32 - 32,
             32,
             32
           );
@@ -374,7 +375,7 @@ function startTetris() {
       for (let j = 0; j < board[i].length; j++) {
         if (board[i][j] != 0) {
           boardContext.fillStyle = colors[board[i][j]];
-          boardContext.fillRect(j * 32, 640 - i * 32, 32, 32);
+          boardContext.fillRect(j * 32, 640 - i * 32 - 32, 32, 32);
         }
       }
     }
@@ -414,19 +415,22 @@ function startTetris() {
     otherContext.fillStyle = "#000000";
     otherContext.fillRect(0, 0, 320, 640);
     pieceData = otherPlayers[id].pieceData;
-    pieceMatrix = generatePieceMatrix(pieceData[0], pieceData[3]);
     scale = 32;
+
     if (otherPlayers[id].isPuyo) {
       scale = 640 / 12;
-    }
 
+      pieceMatrix = generatePuyoPieceMatrix(pieceData[0], pieceData[3]);
+    } else {
+      pieceMatrix = generatePieceMatrix(pieceData[0], pieceData[3]);
+    }
     for (let i = 0; i < pieceMatrix.length; i++) {
       for (let j = 0; j < pieceMatrix[i].length; j++) {
         if (pieceMatrix[i][j] != 0 && pieceMatrix[i][j] != 9) {
           otherContext.fillStyle = colors[pieceMatrix[i][j]];
           otherContext.fillRect(
             (j + pieceX) * scale,
-            640 - (pieceY - i) * scale,
+            640 - (pieceY - i) * scale - scale,
             scale,
             scale
           );
@@ -437,7 +441,7 @@ function startTetris() {
       for (let j = 0; j < otherPlayers[id].board[i].length; j++) {
         if (otherPlayers[id].board[i][j] != 0) {
           otherContext.fillStyle = colors[otherPlayers[id].board[i][j]];
-          otherContext.fillRect(j * scale, 640 - i * scale, scale, scale);
+          otherContext.fillRect(j * scale, 640 - i * scale - scale, scale, scale);
         }
       }
     }
@@ -499,6 +503,18 @@ function startTetris() {
 
   function generatePieceMatrix(piece, rotation) {
     tempMatrix = JSON.parse(JSON.stringify(piece_matrix[piece]));
+    for (let i = 0; i < rotation; i++) {
+      rotateMatrix(tempMatrix);
+    }
+    return tempMatrix;
+  }
+
+  function generatePuyoPieceMatrix(piece, rotation) {
+    tempMatrix = [
+      [0, piece[0], 0],
+      [0, piece[1], 0],
+      [0, 0, 0],
+    ];
     for (let i = 0; i < rotation; i++) {
       rotateMatrix(tempMatrix);
     }
@@ -592,10 +608,13 @@ function startTetris() {
       }
 
       console.log("Lines sent: " + lines_sent);
+      console.log(otherPlayers);
       trashSent = garbageConversion[lines_sent];
-      if (otherPlayers.length > 0) {
-        targets = Object.keys(otherPlayers);
-        target = targets[Math.floor(Math.random() * otherPlayers.length)];
+
+      targets = Object.keys(otherPlayers);
+      if (targets.length > 0) {
+        target = targets[Math.floor(Math.random() * targets.length)];
+        console.log("sending to" + target, trashSent);
         socket.emit("sendLines", target, trashSent);
       }
     }
@@ -738,7 +757,7 @@ function startTetris() {
       clockwise();
       clockwise();
       lastMoveRotate = true;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
@@ -748,14 +767,14 @@ function startTetris() {
       if (tryWallKicks(rotation, (rotation + 1) % 4)) {
         clockwise();
         lastMoveRotate = true;
-        if (collide(piece, pieceX, pieceY - 1, rotation)) {
+        if (collide(piece, pieceX, pieceY, rotation)) {
           gravity = 0;
         }
       }
     } else {
       clockwise();
       lastMoveRotate = true;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
@@ -766,14 +785,14 @@ function startTetris() {
       if (tryWallKicks(rotation, (rotation + 3) % 4)) {
         counterclockwise();
         lastMoveRotate = true;
-        if (collide(piece, pieceX, pieceY - 1, rotation)) {
+        if (collide(piece, pieceX, pieceY, rotation)) {
           gravity = 0;
         }
       }
     } else {
       counterclockwise();
       lastMoveRotate = true;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
@@ -783,7 +802,7 @@ function startTetris() {
     if (!collide(piece, pieceX - 1, pieceY, rotation)) {
       pieceX--;
       lastMoveRotate = false;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
@@ -793,14 +812,14 @@ function startTetris() {
     if (!collide(piece, pieceX + 1, pieceY, rotation)) {
       pieceX++;
       lastMoveRotate = false;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
   }
 
   function harddrop() {
-    while (!collide(piece, pieceX, pieceY - 1, rotation)) {
+    while (!collide(piece, pieceX, pieceY, rotation)) {
       pieceY--;
     }
     placePiece();
@@ -809,7 +828,7 @@ function startTetris() {
   }
 
   function softdrop() {
-    if (!collide(piece, pieceX, pieceY - 1, rotation)) {
+    if (!collide(piece, pieceX, pieceY, rotation)) {
       pieceY--;
       lastMoveRotate = false;
       gravity = 0;
@@ -852,14 +871,27 @@ function startTetris() {
       canvas: tempCanvas,
     };
   }
+  
+  socket.on("removePlayer", (playerId) => {
+    if (otherPlayers.hasOwnProperty(playerId)) {
+      otherPlayers[playerId].canvas.remove()
+      delete otherPlayers[playerId]
+    }
+    })
   socket.on("receiveLines", (target, amount) => {
+    console.log(target, amount);
     if (target == socket.id) {
-      receivedLines += Math.max.apply(
-        Math,
-        garbageConversion.filter(function (x) {
-          return x <= amount;
-        })
-      );
+      var maxReceive = 0;
+      for (var i = 0; i < garbageConversion.length; i++) {
+        if (
+          garbageConversion[i] > maxReceive &&
+          garbageConversion[i] <= amount
+        ) {
+          maxReceive = garbageConversion[i];
+        }
+      }
+      linesReceived += maxReceive;
+      console.log(linesReceived);
     }
   });
 
@@ -1181,7 +1213,7 @@ function startPuyo() {
           boardContext.fillStyle = colors[pieceMatrix[i][j]];
           boardContext.fillRect(
             (j + pieceX) * (640 / 12),
-            640 - (pieceY - i) * (640 / 12),
+            640 - (pieceY - i) * (640 / 12) - (640 / 12),
             640 / 12,
             640 / 12
           );
@@ -1194,7 +1226,7 @@ function startPuyo() {
           boardContext.fillStyle = colors[board[i][j]];
           boardContext.fillRect(
             j * (640 / 12),
-            640 - i * (640 / 12),
+            640 - i * (640 / 12) - (640 / 12),
             640 / 12,
             640 / 12
           );
@@ -1247,10 +1279,13 @@ function startPuyo() {
     otherContext.fillStyle = "#000000";
     otherContext.fillRect(0, 0, 320, 640);
     pieceData = otherPlayers[id].pieceData;
-    pieceMatrix = generatePieceMatrix(pieceData[0], pieceData[3]);
     scale = 32;
     if (otherPlayers[id].isPuyo) {
       scale = 640 / 12;
+
+      pieceMatrix = generatePieceMatrix(pieceData[0], pieceData[3]);
+    } else {
+      pieceMatrix = generateTetrisPieceMatrix(pieceData[0], pieceData[3]);
     }
 
     for (let i = 0; i < pieceMatrix.length; i++) {
@@ -1259,7 +1294,7 @@ function startPuyo() {
           otherContext.fillStyle = colors[pieceMatrix[i][j]];
           otherContext.fillRect(
             (j + pieceX) * scale,
-            640 - (pieceY - i) * scale,
+            640 - (pieceY - i) * scale - scale,
             scale,
             scale
           );
@@ -1270,7 +1305,7 @@ function startPuyo() {
       for (let j = 0; j < otherPlayers[id].board[i].length; j++) {
         if (otherPlayers[id].board[i][j] != 0) {
           otherContext.fillStyle = colors[otherPlayers[id].board[i][j]];
-          otherContext.fillRect(j * scale, 640 - i * scale, scale, scale);
+          otherContext.fillRect(j * scale, 640 - i * scale - scale, scale, scale);
         }
       }
     }
@@ -1323,6 +1358,13 @@ function startPuyo() {
     return tempMatrix;
   }
 
+  function generateTetrisPieceMatrix(piece, rotation) {
+    tempMatrix = JSON.parse(JSON.stringify(piece_matrix[piece]));
+    for (let i = 0; i < rotation; i++) {
+      rotateMatrix(tempMatrix);
+    }
+    return tempMatrix;
+  }
   var rotateMatrix = function (matrix) {
     flipMajorDiagonal(matrix);
     reverseEachRow(matrix);
@@ -1348,7 +1390,7 @@ function startPuyo() {
   };
 
   function pieceGravity() {
-    if (collide(piece, pieceX, pieceY - 1, rotation)) {
+    if (collide(piece, pieceX, pieceY, rotation)) {
       placePiece();
     } else {
       pieceY--;
@@ -1374,25 +1416,25 @@ function startPuyo() {
 
     trashSent = clearLines();
 
-    if (linesReceived > 0) {
-      if (trashSent > linesReceived) {
-        trashSent = trashSent - linesReceived;
-        linesReceived = 0;
-      } else if (trashSent < linesReceived) {
-        linesReceived = linesReceived - trashSent;
+    if (trashReceived > 0) {
+      if (trashSent > trashReceived) {
+        trashSent = trashSent - trashReceived;
+        trashReceived = 0;
+      } else if (trashSent < trashReceived) {
+        trashReceived = trashReceived - trashSent;
         trashSent = 0;
       } else {
         trashSent = 0;
-        linesReceived = 0;
+        trashReceived = 0;
       }
     }
-    if (linesReceived > 0 ) {
-      spawnGarbage()
+    if (trashReceived > 0) {
+      spawnGarbage();
     }
-    
-    if (otherPlayers.length > 0) {
-      targets = Object.keys(otherPlayers);
-      target = targets[Math.floor(Math.random() * otherPlayers.length)];
+
+    targets = Object.keys(otherPlayers);
+    if (targets.length > 0) {
+      target = targets[Math.floor(Math.random() * targets.length)];
       socket.emit("sendLines", target, trashSent);
     }
     console.log("trash sent: " + trashSent);
@@ -1404,57 +1446,58 @@ function startPuyo() {
     socket.emit("sendBoard", board);
   }
   function spawnGarbage() {
-    while (linesReceived > 5) {
-      var line = new Array(6).fill(1)
-board.push(line)
-      linesReceived -= 6
+    while (trashReceived > 5) {
+      var line = new Array(6).fill(1);
+      board.push(line);
+      trashReceived -= 6;
     }
-    var line = new Array(6).fill(0)
-    for (var i = 0; i < linesReceived; i++) {
-      line[i] = 1
+    var line = new Array(6).fill(0);
+    for (var i = 0; i < trashReceived; i++) {
+      line[i] = 1;
     }
-    line =shuffleArray(line)
-    board.push(line)
-    applyGravity()
+    line = shuffleArray(line);
+    board.push(line);
+    applyGravity();
   }
   function applyGravity() {
     coordinates = [];
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board[i].length; j++) {
         if (board[i][j] != 0 && i != 0) {
-          coordinates.push([i, j]);
           tempY = i;
-          while (board[tempY - 1][j] == 0 && tempY > 1) {
+          while (board[tempY - 1][j] == 0 && tempY > 0) {
             tempY--;
           }
           if (tempY != i) {
             board[tempY][j] = board[i][j];
             board[i][j] = 0;
+
+            coordinates.push([tempY, j]);
           }
         }
       }
     }
     return coordinates;
   }
-  function tryChain(coordinates) {
+  function tryChain() {
     tempBoard = board.map((row) => [...row]);
     totalCleared = 0;
     totalColors = [];
     groupBonus = 0;
-    for (let k = 0; k < coordinates; k++) {
-      i = coordinates[k][0];
-      j = coordinates[k][1];
-      if (board[i][j] != 0) {
-        puyoColor = board[i][j];
-        puyosCleared = floodFill(i, j, puyoColor, tempBoard);
+    for (let i = 0; i < board.length; i++) {
+      for (let j = 0; j < board[i].length; j++) {
+        if (board[i][j] != 0) {
+          puyoColor = board[i][j];
+          puyosCleared = floodFill(i, j, puyoColor, tempBoard);
 
-        console.log(puyosCleared);
+          console.log(puyosCleared);
 
-        if (puyosCleared >= 4) {
-          floodFill(i, j, puyoColor, board);
-          totalCleared += puyosCleared;
-          totalColors.push(puyoColor);
-          groupBonus += groupBonusTable[puyosCleared];
+          if (puyosCleared >= 4) {
+            floodFill(i, j, puyoColor, board);
+            totalCleared += puyosCleared;
+            totalColors.push(puyoColor);
+            groupBonus += groupBonusTable[puyosCleared];
+          }
         }
       } //  :)
     }
@@ -1498,15 +1541,14 @@ board.push(line)
 
     chain = 0;
 
-    var coordinates = applyGravity();
-    tempArray = tryChain(coordinates);
+    tempArray = tryChain();
     var totalColors = tempArray[0];
     var totalPuyos = tempArray[1];
     var groupBonus = tempArray[2];
 
     while (tempArray[1] != 0) {
-      coordinates = applyGravity();
-      tempArray = tryChain(coordinates);
+      applyGravity();
+      tempArray = tryChain();
       totalColors.push(...tempArray[0]);
       totalPuyos += tempArray[1];
       groupBonus += tempArray[2];
@@ -1598,7 +1640,7 @@ board.push(line)
         clockwise();
         rotatePressed = true;
 
-        if (collide(piece, pieceX, pieceY - 1, rotation)) {
+        if (collide(piece, pieceX, pieceY, rotation)) {
           gravity = 0;
         }
       } else if (rotatePressed) {
@@ -1610,7 +1652,7 @@ board.push(line)
     } else {
       rotatePressed = true;
       clockwise();
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
@@ -1621,7 +1663,7 @@ board.push(line)
       if (tryWallKicks(rotation, (rotation + 3) % 4)) {
         counterclockwise();
         rotatePress = true;
-        if (collide(piece, pieceX, pieceY - 1, rotation)) {
+        if (collide(piece, pieceX, pieceY, rotation)) {
           gravity = 0;
         }
       } else if (rotatePressed) {
@@ -1633,7 +1675,7 @@ board.push(line)
     } else {
       counterclockwise();
       rotatePressed = true;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
@@ -1651,14 +1693,14 @@ board.push(line)
       pieceX++;
     }
 
-    if (collide(piece, pieceX, pieceY - 1, rotation)) {
+    if (collide(piece, pieceX, pieceY, rotation)) {
       gravity = 0;
     }
   }
   function move_left() {
     if (!collide(piece, pieceX - 1, pieceY, rotation)) {
       pieceX--;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
@@ -1667,14 +1709,14 @@ board.push(line)
   function move_right() {
     if (!collide(piece, pieceX + 1, pieceY, rotation)) {
       pieceX++;
-      if (collide(piece, pieceX, pieceY - 1, rotation)) {
+      if (collide(piece, pieceX, pieceY, rotation)) {
         gravity = 0;
       }
     }
   }
 
   function harddrop() {
-    while (!collide(piece, pieceX, pieceY - 1, rotation)) {
+    while (!collide(piece, pieceX, pieceY , rotation)) {
       pieceY--;
     }
     placePiece();
@@ -1682,7 +1724,7 @@ board.push(line)
   }
 
   function softdrop() {
-    if (!collide(piece, pieceX, pieceY - 1, rotation)) {
+    if (!collide(piece, pieceX, pieceY , rotation)) {
       pieceY--;
       gravity = 0;
     }
@@ -1724,9 +1766,16 @@ board.push(line)
       canvas: tempCanvas,
     };
   }
+  socket.on("removePlayer", (playerId) => {
+    if (otherPlayers.hasOwnProperty(playerId)) {
+      otherPlayers[playerId].canvas.remove()
+      delete otherPlayers[playerId]
+    }
+    
+  })
   socket.on("receiveLines", (target, amount) => {
     if (target == socket.id) {
-      receivedLines += amount;
+      linesReceived += amount;
     }
   });
   socket.on("receivePieceData", (sender, pieceData) => {

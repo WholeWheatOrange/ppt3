@@ -43,4 +43,7 @@ io.on("connection", function (socket) {
   socket.on("sendPieceData", ( data) => {
       io.emit("receivePieceData", socket.id, data)
   })
+  socket.on("disconnect", () => {
+      io.emit("removePlayer", socket.id)
+  })
 });
