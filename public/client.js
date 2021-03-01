@@ -88,6 +88,16 @@ function startTetris() {
     "#0000FF",
     "#CC00FE",
   ];
+  
+  const puyoColors = [
+    "#000000",
+    "#555555",
+    "#FF0100",
+
+    "#00EA01",
+    "#0000FF",
+    "#CC00FE",
+  ];
 
   const wallkicks = {
     "0-1": [
@@ -416,9 +426,10 @@ function startTetris() {
     otherContext.fillRect(0, 0, 320, 640);
     pieceData = otherPlayers[id].pieceData;
     scale = 32;
-
+selectedColors = colors
     if (otherPlayers[id].isPuyo) {
       scale = 640 / 12;
+      selectedColors = puyoColors
 
       pieceMatrix = generatePuyoPieceMatrix(pieceData[0], pieceData[3]);
     } else {
@@ -427,7 +438,7 @@ function startTetris() {
     for (let i = 0; i < pieceMatrix.length; i++) {
       for (let j = 0; j < pieceMatrix[i].length; j++) {
         if (pieceMatrix[i][j] != 0 && pieceMatrix[i][j] != 9) {
-          otherContext.fillStyle = colors[pieceMatrix[i][j]];
+          otherContext.fillStyle = selectedColors[pieceMatrix[i][j]];
           otherContext.fillRect(
             (j + pieceX) * scale,
             640 - (pieceY - i) * scale - scale,
@@ -440,7 +451,7 @@ function startTetris() {
     for (let i = 0; i < otherPlayers[id].board.length; i++) {
       for (let j = 0; j < otherPlayers[id].board[i].length; j++) {
         if (otherPlayers[id].board[i][j] != 0) {
-          otherContext.fillStyle = colors[otherPlayers[id].board[i][j]];
+          otherContext.fillStyle = selectedColors[otherPlayers[id].board[i][j]];
           otherContext.fillRect(j * scale, 640 - i * scale - scale, scale, scale);
         }
       }
@@ -457,7 +468,7 @@ function startTetris() {
         if (j + x < 0 || j + x > 9) {
           return true;
         }
-        if (y - i <= 0) {
+        if (y - i < 0) {
           return true;
         }
         if (y - i < board.length) {
@@ -564,7 +575,7 @@ function startTetris() {
     pieceMatrix = generatePieceMatrix(piece, rotation);
     for (let i = 0; i < pieceMatrix.length; i++) {
       for (let j = 0; j < pieceMatrix[i].length; j++) {
-        while (pieceY - i >= board.length) {
+        while (pieceY - i + 1 >= board.length) {
           board.push([...empty_line]);
         }
         if (pieceMatrix[i][j] != 0 && pieceMatrix[i][j] != 9) {
@@ -578,8 +589,11 @@ function startTetris() {
 
         if (piece == "T") {
           if (
-            (i == 0 || i == 2 || j == 0 || j == 2) &&
-            board[pieceY - i][j] != 0
+            (i == 0 || i == 2 || j == 0 || j == 2) && (
+
+              pieceY - i < 0 || j + pieceX < 0 || j + pieceX > 9 ||
+            board[pieceY - i][j + pieceX] != 0
+            )
           ) {
             cornersFilled++;
           }
@@ -639,7 +653,7 @@ function startTetris() {
       tempLine[hole] = 0;
       board.unshift(tempLine);
       if (
-        (volatility ** consecutiveLines - volatility) * 0.01 <
+        ((volatility ** consecutiveLines) - volatility) * 0.01>
         Math.random()
       ) {
         consecutiveLines = 0;
@@ -757,7 +771,7 @@ function startTetris() {
       clockwise();
       clockwise();
       lastMoveRotate = true;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY - 1, rotation)) {
         gravity = 0;
       }
     }
@@ -767,14 +781,14 @@ function startTetris() {
       if (tryWallKicks(rotation, (rotation + 1) % 4)) {
         clockwise();
         lastMoveRotate = true;
-        if (collide(piece, pieceX, pieceY, rotation)) {
+        if (collide(piece, pieceX, pieceY - 1, rotation)) {
           gravity = 0;
         }
       }
     } else {
       clockwise();
       lastMoveRotate = true;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY - 1, rotation)) {
         gravity = 0;
       }
     }
@@ -785,14 +799,14 @@ function startTetris() {
       if (tryWallKicks(rotation, (rotation + 3) % 4)) {
         counterclockwise();
         lastMoveRotate = true;
-        if (collide(piece, pieceX, pieceY, rotation)) {
+        if (collide(piece, pieceX, pieceY - 1, rotation)) {
           gravity = 0;
         }
       }
     } else {
       counterclockwise();
       lastMoveRotate = true;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY - 1, rotation)) {
         gravity = 0;
       }
     }
@@ -802,7 +816,7 @@ function startTetris() {
     if (!collide(piece, pieceX - 1, pieceY, rotation)) {
       pieceX--;
       lastMoveRotate = false;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY-1, rotation)) {
         gravity = 0;
       }
     }
@@ -812,14 +826,14 @@ function startTetris() {
     if (!collide(piece, pieceX + 1, pieceY, rotation)) {
       pieceX++;
       lastMoveRotate = false;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY - 1, rotation)) {
         gravity = 0;
       }
     }
   }
 
   function harddrop() {
-    while (!collide(piece, pieceX, pieceY, rotation)) {
+    while (!collide(piece, pieceX, pieceY - 1, rotation)) {
       pieceY--;
     }
     placePiece();
@@ -828,7 +842,7 @@ function startTetris() {
   }
 
   function softdrop() {
-    if (!collide(piece, pieceX, pieceY, rotation)) {
+    if (!collide(piece, pieceX, pieceY - 1, rotation)) {
       pieceY--;
       lastMoveRotate = false;
       gravity = 0;
@@ -887,7 +901,7 @@ function startTetris() {
           garbageConversion[i] > maxReceive &&
           garbageConversion[i] <= amount
         ) {
-          maxReceive = garbageConversion[i];
+          maxReceive = i
         }
       }
       linesReceived += maxReceive;
@@ -1028,6 +1042,18 @@ function startPuyo() {
     "#0000FF",
     "#CC00FE",
   ];
+  
+  const tetrisColors = [
+    "#000000",
+    "#555555",
+    "#FF0100",
+    "#FEAA00",
+    "#FFFE02",
+    "#00EA01",
+    "#00DDFF",
+    "#0000FF",
+    "#CC00FE",
+  ];
 
   const wallkicks = {
     "0-1": [[-1, 0]],
@@ -1040,29 +1066,8 @@ function startPuyo() {
     "0-3": [[1, 0]],
   };
 
-  const chain_table = [
-    0,
-    0,
-    1,
-    1,
-    2,
-    2,
-    3,
-    3,
-    4,
-    4,
-    4,
-    5,
-    5,
-    5,
-    5,
-    6,
-    6,
-    6,
-    6,
-    6,
-  ];
   const chainBonusTable = [
+    0,
     0,
     8,
     16,
@@ -1280,18 +1285,21 @@ function startPuyo() {
     otherContext.fillRect(0, 0, 320, 640);
     pieceData = otherPlayers[id].pieceData;
     scale = 32;
+    
+selectedColors = colors
     if (otherPlayers[id].isPuyo) {
       scale = 640 / 12;
 
       pieceMatrix = generatePieceMatrix(pieceData[0], pieceData[3]);
     } else {
       pieceMatrix = generateTetrisPieceMatrix(pieceData[0], pieceData[3]);
+      selectedColors = tetrisColors
     }
 
     for (let i = 0; i < pieceMatrix.length; i++) {
       for (let j = 0; j < pieceMatrix[i].length; j++) {
         if (pieceMatrix[i][j] != 0 && pieceMatrix[i][j] != 9) {
-          otherContext.fillStyle = colors[pieceMatrix[i][j]];
+          otherContext.fillStyle = selectedColors[pieceMatrix[i][j]];
           otherContext.fillRect(
             (j + pieceX) * scale,
             640 - (pieceY - i) * scale - scale,
@@ -1304,7 +1312,7 @@ function startPuyo() {
     for (let i = 0; i < otherPlayers[id].board.length; i++) {
       for (let j = 0; j < otherPlayers[id].board[i].length; j++) {
         if (otherPlayers[id].board[i][j] != 0) {
-          otherContext.fillStyle = colors[otherPlayers[id].board[i][j]];
+          otherContext.fillStyle = selectedColors[otherPlayers[id].board[i][j]];
           otherContext.fillRect(j * scale, 640 - i * scale - scale, scale, scale);
         }
       }
@@ -1320,7 +1328,7 @@ function startPuyo() {
         if (j + x < 0 || j + x > 5) {
           return true;
         }
-        if (y - i <= 0) {
+        if (y - i < 0) {
           return true;
         }
         if (y - i < board.length) {
@@ -1390,7 +1398,7 @@ function startPuyo() {
   };
 
   function pieceGravity() {
-    if (collide(piece, pieceX, pieceY, rotation)) {
+    if (collide(piece, pieceX, pieceY - 1, rotation)) {
       placePiece();
     } else {
       pieceY--;
@@ -1446,7 +1454,7 @@ function startPuyo() {
     socket.emit("sendBoard", board);
   }
   function spawnGarbage() {
-    while (trashReceived > 5) {
+    while (trashReceived >= 6) {
       var line = new Array(6).fill(1);
       board.push(line);
       trashReceived -= 6;
@@ -1457,27 +1465,26 @@ function startPuyo() {
     }
     line = shuffleArray(line);
     board.push(line);
+    trashReceived = 0
     applyGravity();
   }
   function applyGravity() {
-    coordinates = [];
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board[i].length; j++) {
         if (board[i][j] != 0 && i != 0) {
           tempY = i;
-          while (board[tempY - 1][j] == 0 && tempY > 0) {
+          while (tempY > 0&&board[tempY - 1][j] == 0) {
             tempY--;
           }
           if (tempY != i) {
             board[tempY][j] = board[i][j];
             board[i][j] = 0;
 
-            coordinates.push([tempY, j]);
           }
         }
       }
     }
-    return coordinates;
+    return ;
   }
   function tryChain() {
     tempBoard = board.map((row) => [...row]);
@@ -1486,25 +1493,24 @@ function startPuyo() {
     groupBonus = 0;
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board[i].length; j++) {
-        if (board[i][j] != 0) {
+        if (board[i][j] > 1) {
           puyoColor = board[i][j];
           puyosCleared = floodFill(i, j, puyoColor, tempBoard);
 
           console.log(puyosCleared);
 
           if (puyosCleared >= 4) {
-            floodFill(i, j, puyoColor, board);
+            groupBonus += groupBonusTable[puyosCleared];
+            puyosCleared=floodFill(i, j, puyoColor, board, true);
             totalCleared += puyosCleared;
             totalColors.push(puyoColor);
-            groupBonus += groupBonusTable[puyosCleared];
           }
         }
       } //  :)
     }
-    console.log(tempBoard);
     return [totalColors, totalCleared, groupBonus];
   }
-  function floodFill(i, j, color, matrix) {
+  function floodFill(i, j, color, matrix, clearGarbage = false) {
     if (i < 0 || j < 0) {
       return 0;
     }
@@ -1515,6 +1521,28 @@ function startPuyo() {
       return 0;
     }
     matrix[i][j] = 0;
+    if (clearGarbage) {
+      if (i < matrix.length &&matrix[i + 1][j] == 1) {
+        matrix[i + 1][j] = 0
+        filledIn += 1;
+      }
+      
+      if (i >= 0 &&matrix[i - 1][j] == 1) {
+        matrix[i - 1][j] = 0
+        filledIn += 1;
+      }
+      
+      if (j < matrix[i].length &&matrix[i ][j + 1] == 1) {
+        matrix[i ][ j + 1] = 0
+        filledIn += 1;
+      }
+      
+      if ( j >= 0 &&matrix[i ][ j - 1] == 1) {
+        matrix[i ][ j - 1] = 0
+        filledIn += 1;
+      }
+    }
+    
     filledIn = 1;
     filledIn += floodFill(i + 1, j, color, matrix);
 
@@ -1540,7 +1568,7 @@ function startPuyo() {
     }
 
     chain = 0;
-
+    applyGravity()
     tempArray = tryChain();
     var totalColors = tempArray[0];
     var totalPuyos = tempArray[1];
@@ -1640,7 +1668,7 @@ function startPuyo() {
         clockwise();
         rotatePressed = true;
 
-        if (collide(piece, pieceX, pieceY, rotation)) {
+        if (collide(piece, pieceX, pieceY - 1, rotation)) {
           gravity = 0;
         }
       } else if (rotatePressed) {
@@ -1652,7 +1680,7 @@ function startPuyo() {
     } else {
       rotatePressed = true;
       clockwise();
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY - 1, rotation)) {
         gravity = 0;
       }
     }
@@ -1663,7 +1691,7 @@ function startPuyo() {
       if (tryWallKicks(rotation, (rotation + 3) % 4)) {
         counterclockwise();
         rotatePress = true;
-        if (collide(piece, pieceX, pieceY, rotation)) {
+        if (collide(piece, pieceX, pieceY - 1, rotation)) {
           gravity = 0;
         }
       } else if (rotatePressed) {
@@ -1675,7 +1703,7 @@ function startPuyo() {
     } else {
       counterclockwise();
       rotatePressed = true;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY - 1, rotation)) {
         gravity = 0;
       }
     }
@@ -1693,14 +1721,14 @@ function startPuyo() {
       pieceX++;
     }
 
-    if (collide(piece, pieceX, pieceY, rotation)) {
+    if (collide(piece, pieceX, pieceY - 1, rotation)) {
       gravity = 0;
     }
   }
   function move_left() {
     if (!collide(piece, pieceX - 1, pieceY, rotation)) {
       pieceX--;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY-1, rotation)) {
         gravity = 0;
       }
     }
@@ -1709,14 +1737,14 @@ function startPuyo() {
   function move_right() {
     if (!collide(piece, pieceX + 1, pieceY, rotation)) {
       pieceX++;
-      if (collide(piece, pieceX, pieceY, rotation)) {
+      if (collide(piece, pieceX, pieceY - 1, rotation)) {
         gravity = 0;
       }
     }
   }
 
   function harddrop() {
-    while (!collide(piece, pieceX, pieceY , rotation)) {
+    while (!collide(piece, pieceX, pieceY - 1 , rotation)) {
       pieceY--;
     }
     placePiece();
@@ -1724,7 +1752,7 @@ function startPuyo() {
   }
 
   function softdrop() {
-    if (!collide(piece, pieceX, pieceY , rotation)) {
+    if (!collide(piece, pieceX, pieceY - 1 , rotation)) {
       pieceY--;
       gravity = 0;
     }
@@ -1766,7 +1794,7 @@ function startPuyo() {
       canvas: tempCanvas,
     };
   }
-  socket.on("removePlayer", (playerId) => {
+socket.on("removePlayer", (playerId) => {
     if (otherPlayers.hasOwnProperty(playerId)) {
       otherPlayers[playerId].canvas.remove()
       delete otherPlayers[playerId]
@@ -1775,7 +1803,7 @@ function startPuyo() {
   })
   socket.on("receiveLines", (target, amount) => {
     if (target == socket.id) {
-      linesReceived += amount;
+      trashReceived += amount;
     }
   });
   socket.on("receivePieceData", (sender, pieceData) => {
